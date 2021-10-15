@@ -1,16 +1,17 @@
-### Hi there 👋
+# ADL-GAN
 
-<!--
-**ContextGAN/ContextGAN** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+This repository contains codes used to conduct experiments in ADL-GAN: Data Augmentation to Improve In-the-wild ADL Recognition using GANs paper.
+We proposed GAN-based models to augment smartphone sensor data for Activity of Daily Living (ADL) recognition task. We will upload model and include more details after paper publication.
 
-Here are some ideas to get you started:
+## ADL-transfer
+python main.py ADL-transfer
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Subject-transfer
+python main.py subject-transfer
+
+## Dependency
+* Librosa=0.7.2
+* pytorch=1.3.1
+* scikit-learn
+
+The training configuration is in pre_processing.py
