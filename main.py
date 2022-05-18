@@ -16,7 +16,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 #data loader
 dataset = ADLDataset()
 loader = DataLoader(dataset,batch_size=batch_size, shuffle=False, num_workers=num_workers,drop_last=True) 
-context_size = 13
+
 #Model and optimizers
 G = Generator(context_size)
 D = Discriminator()
