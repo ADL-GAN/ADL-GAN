@@ -16,7 +16,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 #data loader
 dataset = ADLDataset()
 loader = DataLoader(dataset,batch_size=batch_size, shuffle=False, num_workers=num_workers,drop_last=True) 
-
+context_size = 13
 #Model and optimizers
 G = Generator(context_size)
 D = Discriminator()
@@ -34,7 +34,7 @@ scheduler_c = StepLR(c_optimizer, step_size=10, gamma=1-decay)
 
 #classifier loss
 CELoss = nn.CrossEntropyLoss()
-
+cos = nn.CosineSimilarity()
 #loading speaker embedding model
 if sys.argv[1]=='subject_transfer': 
     dvector = torch.jit.load(checkpoint_path).eval().to(device)
@@ -89,7 +89,7 @@ for i in range(num_iters):
 
     cls_real = C(x_real)
     if sys.argv[1]=='subject_transfer':
-        cls_loss_real = CELoss(input=cls_real, target=speaker_idx_org) + GE2E_loss(label_org)
+        cls_loss_real = (1-cos(cls_real,label_org)) + GE2E_loss(cls_real)
     else:
         cls_loss_real = CELoss(input=cls_real, target=context_idx_org) 
 
@@ -115,7 +115,7 @@ for i in range(num_iters):
         F.binary_cross_entropy(input=out_r, target=torch.ones_like(out_r, dtype=torch.float))
     out_cls = C(x_fake)
     if sys.argv[1]=='subject_transfer':
-        d_loss_cls = CELoss(input=out_cls, target=speaker_idx_trg) + GE2E_loss(label_org)
+        d_loss_cls = (1-cos(out_cls,speaker_idx_trg)) + GE2E_loss(out_cls)
     else:
         d_loss_cls = CELoss(input=out_cls, target=context_idx_org[rand_idx])
 
