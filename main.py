@@ -12,7 +12,7 @@ from pre_processing import *
 import gc
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+context_size=13
 #data loader
 dataset = ADLDataset()
 loader = DataLoader(dataset,batch_size=batch_size, shuffle=False, num_workers=num_workers,drop_last=True) 
@@ -79,11 +79,10 @@ for i in range(num_iters):
     #randomly select target subject or context
     rand_idx = torch.randperm(label_org.size(0))
     label_trg = label_org[rand_idx]
-    speaker_idx_trg = speaker_idx_org[rand_idx]
-
+    context_idx_trg = context_idx_org[rand_idx]
     #move to cuda
     x_real,label_org,label_trg = x_real.to(device),label_org.to(device),label_trg.to(device) 
-    speaker_idx_org,speaker_idx_trg,context_idx_org = speaker_idx_org.to(device),speaker_idx_trg.to(device),context_idx_org.to(device)
+    context_idx_trg,context_idx_org = context_idx_trg.to(device),context_idx_org.to(device)
 
     #classify real data
 
@@ -130,7 +129,11 @@ for i in range(num_iters):
         g_loss_fake = F.binary_cross_entropy_with_logits(input=g_out_src, target=torch.ones_like(g_out_src, dtype=torch.float))
         
         out_cls = C(x_fake)
-        g_loss_cls = CELoss(input=out_cls, target=speaker_idx_trg)
+
+        if sys.argv[1]=='subject_transfer':
+            g_loss_cls = (1-cos(out_cls,label_trg)) + GE2E_loss(out_cls)
+        else:
+            g_loss_cls = CELoss(input=out_cls, target=context_idx_trg) 
 
         # Target-to-original domain.
         x_reconst = G(x_fake, label_org)
@@ -141,8 +144,7 @@ for i in range(num_iters):
         # id_loss = F.l1_loss(x_fake_iden, x_real )
 
         # Backward and optimize.
-        g_loss = g_loss_fake + lambda_cycle * g_loss_rec +\
-         lambda_cls * g_loss_cls# + lambda_identity * id_loss
+        g_loss = g_loss_fake + lambda_rec * g_loss_rec + lambda_cls * g_loss_cls# + lambda_identity * id_loss
          
         g_optimizer.zero_grad()
         d_optimizer.zero_grad()
