@@ -161,7 +161,6 @@ for i in range(num_iters):
         loss['G/loss_fake'] = g_loss_fake.item()
         loss['G/loss_rec'] = g_loss_rec.item()
         loss['G/loss_cls'] = g_loss_cls.item()
-        loss['G/loss_id'] = id_loss.item()
         loss['G/g_loss'] = g_loss.item()
 
         #logging
