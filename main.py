@@ -93,39 +93,22 @@ for i in range(num_iters):
     else:
         cls_loss_real = CELoss(input=cls_real, target=context_idx_org) 
 
-    g_optimizer.zero_grad()
-    d_optimizer.zero_grad()
-    c_optimizer.zero_grad()
-    if sys.argv[1]=='subject_transfer':
-        GE2E_optimizer.zero_grad()
-    cls_loss_real.backward()
-    c_optimizer.step()
-    if sys.argv[1]=='subject_transfer':
-        GE2E_optimizer.step()
-    loss = {}
-    loss['C/C_loss'] = cls_loss_real.item()
 
-    #update discriminator
+    #update discriminators
     out_r = D(x_real)
-    # Compute loss with fake audio frame.
     x_fake = G(x_real, label_trg)
 
     out_f = D(x_fake.detach())
     d_loss_t = F.binary_cross_entropy(input=out_f,target=torch.zeros_like(out_f, dtype=torch.float)) + \
         F.binary_cross_entropy(input=out_r, target=torch.ones_like(out_r, dtype=torch.float))
-    out_cls = C(x_fake)
-    if sys.argv[1]=='subject_transfer':
-        d_loss_cls = (1-cos(out_cls,speaker_idx_trg)) + GE2E_loss(out_cls)
-    else:
-        d_loss_cls = CELoss(input=out_cls, target=context_idx_org[rand_idx])
-
+    
     # Compute loss for gradient penalty.
     alpha = torch.rand(x_real.size(0), 1, 1).to(device)
     x_hat = (alpha * x_real.data + (1 - alpha) * x_fake.data).requires_grad_(True)
     out_src = D(x_hat)
     d_loss_gp = gradient_penalty(out_src, x_hat)
 
-    d_loss = d_loss_t + lambda_cls * d_loss_cls + d_loss_gp
+    d_loss = d_loss_t + lambda_cls * cls_loss_real + d_loss_gp * lambda_gp
 
     g_optimizer.zero_grad()
     d_optimizer.zero_grad()
@@ -133,8 +116,11 @@ for i in range(num_iters):
     if sys.argv[1]=='subject_transfer':
         GE2E_optimizer.zero_grad()
     d_loss.backward()
+    c_optimizer.step()
     d_optimizer.step()
 
+    loss = {}
+    loss['C/C_loss'] = cls_loss_real.item()
     loss['D/D_loss'] = d_loss.item()
 
     #update generator
@@ -143,20 +129,20 @@ for i in range(num_iters):
         g_out_src = D(x_fake)
         g_loss_fake = F.binary_cross_entropy_with_logits(input=g_out_src, target=torch.ones_like(g_out_src, dtype=torch.float))
         
-        out_cls = C(x_real)
-        g_loss_cls = CELoss(input=out_cls, target=speaker_idx_org)
+        out_cls = C(x_fake)
+        g_loss_cls = CELoss(input=out_cls, target=speaker_idx_trg)
 
         # Target-to-original domain.
         x_reconst = G(x_fake, label_org)
         g_loss_rec = F.l1_loss(x_reconst, x_real )
 
         # Original-to-Original domain(identity).
-        x_fake_iden = G(x_real, label_org)
-        id_loss = F.l1_loss(x_fake_iden, x_real )
+        # x_fake_iden = G(x_real, label_org)
+        # id_loss = F.l1_loss(x_fake_iden, x_real )
 
         # Backward and optimize.
         g_loss = g_loss_fake + lambda_cycle * g_loss_rec +\
-         lambda_cls * g_loss_cls + lambda_identity * id_loss
+         lambda_cls * g_loss_cls# + lambda_identity * id_loss
          
         g_optimizer.zero_grad()
         d_optimizer.zero_grad()
