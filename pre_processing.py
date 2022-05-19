@@ -24,9 +24,9 @@ lr = 2e-4
 decay=1e-5
 num_workers=4
 
-lambda_cycle = 1.2
+lambda_rec = 1.2
 lambda_cls = 1.8
-lambda_identity = 1
+lambda_gp = 0.2
 
 
 isFile = os.path.isdir(data_dir) and os.path.isdir(normalize_path)
