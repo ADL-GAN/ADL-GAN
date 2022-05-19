@@ -88,7 +88,7 @@ for i in range(num_iters):
 
     cls_real = C(x_real)
     if sys.argv[1]=='subject_transfer':
-        cls_loss_real = (1-cos(cls_real,label_org)) + GE2E_loss(cls_real)* lambda_GE2E
+        cls_loss_real = (1-cos(cls_real,label_org)).mean() + GE2E_loss(cls_real.reshape(len(x_real),1,-1))/len(x_real)* lambda_GE2E
     else:
         cls_loss_real = CELoss(input=cls_real, target=context_idx_org) 
 
@@ -131,7 +131,7 @@ for i in range(num_iters):
         out_cls = C(x_fake)
 
         if sys.argv[1]=='subject_transfer':
-            g_loss_cls = (1-cos(out_cls,label_trg)) + GE2E_loss(out_cls) * lambda_GE2E
+            g_loss_cls = (1-cos(out_cls,label_trg)).mean() + GE2E_loss(out_cls.reshape(len(x_real),1,-1))/len(x_real) * lambda_GE2E
         else:
             g_loss_cls = CELoss(input=out_cls, target=context_idx_trg) 
 
