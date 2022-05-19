@@ -27,7 +27,7 @@ num_workers=4
 lambda_rec = 1.2
 lambda_cls = 1.8
 lambda_gp = 0.2
-
+lambda_GE2E = 0.4
 
 isFile = os.path.isdir(data_dir) and os.path.isdir(normalize_path)
 
