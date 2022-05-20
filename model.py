@@ -21,16 +21,18 @@ class Down(nn.Module):
             
 class Up(nn.Module):
     """Up sampling"""
-    def __init__(self, in_channel ,out_channel, kernel, stride, padding):
+    def __init__(self, in_channel ,out_channel, kernel, stride, padding,last=False):
         super(Up, self).__init__()
         self.dconv = nn.ConvTranspose1d(in_channel, out_channel, kernel_size=kernel, stride=stride, padding=padding)
         self.norm = nn.InstanceNorm1d(out_channel)
+        self.last = last
         self.relu = nn.LeakyReLU()
          
     def forward(self, x):
         x = self.dconv(x)
-        x = self.norm(x)
-        x = self.relu(x)
+        if not last:
+            x = self.norm(x)
+            x = self.relu(x)
         return x
 
 class ResidualBlock(nn.Module):
