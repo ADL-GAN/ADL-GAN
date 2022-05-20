@@ -30,7 +30,7 @@ class Up(nn.Module):
          
     def forward(self, x):
         x = self.dconv(x)
-        if not last:
+        if not self.last:
             x = self.norm(x)
             x = self.relu(x)
         return x
